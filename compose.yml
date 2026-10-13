@@ -1,0 +1,62 @@
+# A clixon controller that cannot reach a device. See README.md.
+#
+# Settings come from .env beside this file (copy .env.example). Build with
+# ./build.sh rather than `docker compose build`: it passes in the checkouts'
+# git versions, which configure needs.
+name: local-clixon-dev
+
+services:
+  controller:
+    container_name: "${CONTAINER_NAME:-clixon-dev}"
+    image: local-clixon-dev:latest
+    build:
+      context: .
+      dockerfile: controller/Dockerfile
+      args:
+        # Set by build.sh from `git describe` in each checkout.
+        CLIXON_VERSION: "${CLIXON_VERSION:-}"
+        CONTROLLER_VERSION: "${CONTROLLER_VERSION:-}"
+    environment:
+      # A file under fetched/configs/ to load as the startup datastore, e.g.
+      # controller.xml. Empty keeps the datastore from the last run (or
+      # starts empty if there is none).
+      SEED_CONFIG: "${SEED_CONFIG:-}"
+      DBG: "${DBG:-0}"
+      # external (default): the backend runs no service daemon and serves its
+      #   socket over TCP; services run only while harness/clixon_pyapi_local.py
+      #   runs on your machine (or its VS Code launch target).
+      # internal: the backend runs the pyapi itself, as production does.
+      # debugpy: like internal, under debugpy on 5678 for attaching.
+      PYAPI: "${PYAPI:-external}"
+      DEBUGPY_WAIT: "${DEBUGPY_WAIT:-false}"
+      # Leave on: with devices enabled (and so CLOSED), `commit diff` prints
+      # nothing. See docs/how-it-works.md.
+      DISABLE_DEVICES: "${DISABLE_DEVICES:-true}"
+      # VALIDATE (default) checks types, ranges, must/when as well as
+      # structure. BIND checks structure only, which is the controller's own
+      # default. VALIDATE needs fetched/device-schemas.json, or the seeded
+      # config fails against YANG revisions the devices do not run.
+      YANG_CONFIG: "${YANG_CONFIG:-VALIDATE}"
+      # Devices to mount YANG for (comma-separated shell patterns). The
+      # memory dial. Empty primes the first device in the datastore.
+      PRIME_DEVICES: "${PRIME_DEVICES:-}"
+      # Seconds the backend waits for the service daemon. The stock 300 is
+      # too short to sit on a breakpoint.
+      SERVICE_TIMEOUT: "${SERVICE_TIMEOUT:-3600}"
+    ports:
+      # Loopback only: an IPv4 clixon socket has no credential check.
+      - "127.0.0.1:${BACKEND_PORT:-4535}:4535"
+      - "127.0.0.1:${DEBUGPY_PORT:-5678}:5678"
+    volumes:
+      - "${SNC_SERVICES:-./checkouts/snc-services}:/services:ro"
+      # Device YANG, the domain dir the controller resolves mount points
+      # from. Without it the device config subtree has nothing to bind to.
+      - "./fetched/mounts:/usr/local/share/controller/mounts:ro"
+      # The rest of what was obtained from the host: main/, configs/,
+      # device-schemas.json. A directory rather than single-file mounts, so
+      # a file that was never fetched is simply absent.
+      - "./fetched:/fetched:ro"
+      - "datastore:/usr/local/var/controller"
+
+volumes:
+  datastore:

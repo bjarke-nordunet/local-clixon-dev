@@ -1,0 +1,63 @@
+{
+    // Debug targets. Edit, copy or delete entries rather than answering
+    // prompts on every run.
+    "version": "0.2.0",
+    "configurations": [
+        {
+            // THE full debug session. Start the controller first:
+            //   ./up.sh --no-pyapi
+            // then launch this. With PYAPI=external (the default) the
+            // backend has no service daemon of its own, so services run only
+            // while this does: breakpoints anywhere, including
+            // clixon/modules.py, and a restart takes a second.
+            //
+            // Trigger a hook from a terminal: ./cli.sh, then
+            //   configure / set services ... / commit diff
+            "name": "Clixon: run pyapi locally",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/harness/clixon_pyapi_local.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "cwd": "${workspaceFolder}",
+            "args": []
+        },
+        {
+            // Alternative: the pyapi stays in the container and you attach.
+            //   PYAPI=debugpy ./up.sh
+            // Closer to production (same interpreter, the installed copy of
+            // the service code), but breakpoints resolve through the
+            // pathMappings below. DEBUGPY_WAIT=true makes the daemon wait
+            // for you. If DEBUGPY_PORT is set in .env, change the port here.
+            "name": "Clixon: attach to pyapi in container",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
+            },
+            "justMyCode": false,
+            "pathMappings": [
+                {
+                    // If SNC_SERVICES puts the checkout elsewhere, change this.
+                    "localRoot": "${workspaceFolder}/checkouts/snc-services/packages",
+                    "remoteRoot": "/usr/local/share/controller/modules"
+                },
+                {
+                    // Lets you step into run_modules/run_hooks themselves.
+                    "localRoot": "${workspaceFolder}/checkouts/clixon-pyapi/clixon",
+                    "remoteRoot": "/usr/local/lib/python3.11/dist-packages/clixon"
+                }
+            ]
+        },
+        {
+            "name": "Clixon: fetch everything from the host",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/harness/clixon_fetch.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "args": ["all"]
+        }
+    ]
+}

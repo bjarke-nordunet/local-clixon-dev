@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Read from CLICON_CONFIGDIR after controller.xml, overriding it. -->
+<clixon-config xmlns="http://clicon.org/config">
+  <!-- The controller ships this as true: the datastore becomes a startup_db.d/
+       directory with 0.xml plus one <digest>.xml per mount point. It means a config
+       obtained with `harness/clixon_fetch.py config` cannot simply be dropped in as the
+       startup datastore. Off here so seeding is a file copy.
+
+       This is the one deliberate divergence from production. It does not
+       affect YANG binding, validation or the service transaction. -->
+  <CLICON_XMLDB_MULTI>false</CLICON_XMLDB_MULTI>
+</clixon-config>

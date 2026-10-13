@@ -1,0 +1,14 @@
+# The build context is the repo root, so that the Dockerfile can COPY the
+# three clixon checkouts. Everything else stays out of it.
+#
+# snc-services is bind-mounted at run time, never built in. fetched/ is
+# bind-mounted too.
+venv/
+fetched/
+checkouts/snc-services/
+.vscode/
+harness/
+docs/
+**/.git/
+**/__pycache__/
+**/*.pyc

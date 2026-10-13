@@ -1,0 +1,8 @@
+.env
+checkouts/
+fetched/
+venv/
+__pycache__/
+
+# this has sample configurations etc, so revert any global ignores
+!.vscode/
